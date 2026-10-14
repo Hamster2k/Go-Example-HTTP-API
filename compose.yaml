@@ -1,0 +1,25 @@
+services:
+  api:
+    # Set in a .env file, e.g. APP_IMAGE=ghcr.io/<owner>/<repo>:latest
+    image: ${APP_IMAGE:?Set APP_IMAGE to the published image, e.g. ghcr.io/owner/repo:latest}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - api-data:/data
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  watchtower:
+    # Maintained fork; the original containrrr image fails against recent Docker versions
+    image: nickfedor/watchtower:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_POLL_INTERVAL: 30
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_CLEANUP: "true"
+
+volumes:
+  api-data:
