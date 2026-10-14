@@ -1,13 +1,30 @@
 services:
   api:
-    image: ghcr.io/Hamster2k/Go-Example-HTTP-API/:latest
+    image: ghcr.io/hamster2k/go-example-http-api:latest
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     volumes:
       - api-data:/data
     labels:
       - com.centurylinklabs.watchtower.enable=true
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      # Public domain pointing at this server, set in .env; defaults to a local self-signed cert
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
 
   watchtower:
     # Maintained fork; the original containrrr image fails against recent Docker versions
@@ -22,3 +39,5 @@ services:
 
 volumes:
   api-data:
+  caddy-data:
+  caddy-config:
