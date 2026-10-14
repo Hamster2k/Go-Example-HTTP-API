@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"log"
@@ -22,9 +23,13 @@ type Server struct {
 	store *Store
 }
 
+//go:embed static/index.html
+var indexHTML []byte
+
 func NewServer(store *Store) http.Handler {
 	s := &Server{store: store}
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("GET /healthz", s.health)
 	mux.HandleFunc("POST /objects", s.create)
 	mux.HandleFunc("GET /objects", s.list)
@@ -53,6 +58,14 @@ func (in *objectInput) validate() string {
 		return "message must be at most 2000 characters"
 	}
 	return ""
+}
+
+func (s *Server) index(w http.ResponseWriter, r *http.Request) {
+	h := w.Header()
+	h.Set("Content-Type", "text/html; charset=utf-8")
+	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+	h.Set("X-Content-Type-Options", "nosniff")
+	w.Write(indexHTML)
 }
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {

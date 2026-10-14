@@ -132,3 +132,17 @@ func TestHealth(t *testing.T) {
 		t.Fatalf("got %d", rec.Code)
 	}
 }
+
+func TestIndexPage(t *testing.T) {
+	h := newTestServer(t)
+	rec := do(t, h, "GET", "/", "")
+	if rec.Code != http.StatusOK || !strings.HasPrefix(rec.Header().Get("Content-Type"), "text/html") {
+		t.Fatalf("got %d %q", rec.Code, rec.Header().Get("Content-Type"))
+	}
+	if !strings.Contains(rec.Body.String(), "<title>") {
+		t.Error("body is not the HTML page")
+	}
+	if rec := do(t, h, "GET", "/nope", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("unknown path: got %d", rec.Code)
+	}
+}
